@@ -11,7 +11,6 @@ load_dotenv()
 
 chatGptAPIKey = os.getenv("CHATGPT_APIKEY")
 openai.api_key = chatGptAPIKey
-model_engine = "text-davinci-003"
 
 app = FastAPI(redoc_url=None)
 
@@ -23,6 +22,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+messages = []
+
 
 @app.post("/api/text2json")
 def text2json(tasks: BusinessTasks):
@@ -32,13 +33,18 @@ def text2json(tasks: BusinessTasks):
     for task in tasks.tasks:
         prompt += task
 
-    completion = openai.Completion.create(
-        engine=model_engine,
-        prompt=prompt,
-        max_tokens=1024,
-        n=1,
-        stop=None,
+    messages.append(
+        {"role": "user", "content": prompt}
+    )
+
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
         temperature=0.5,
     )
 
-    return json.loads(completion.choices[0].text)
+    messages.append(
+        {"role": "assistant", "content": completion.choices[0]['message']['content']}
+    )
+
+    return json.loads(completion.choices[0]['message']['content'])
