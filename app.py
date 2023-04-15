@@ -53,6 +53,7 @@ def text2json(tasks: BusinessTasks):
         response = json.loads(completion.choices[0]['message']['content'])
     except Exception as e:
         logger.error(e)
+        message = []
         response = {"error":completion.choices[0]['message']['content']}
 
     return response
