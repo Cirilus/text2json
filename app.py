@@ -36,18 +36,21 @@ def text2json(tasks: BusinessTasks):
     messages.append(
         {"role": "user", "content": prompt}
     )
-    try:
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            temperature=0.5,
-        )
-    except Exception as e:
-        return {"message": "Что-то пошло не так, пожалуйста перегенерируйте запрос", "error": e}
-
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
+        temperature=0.5,
+    )
 
     messages.append(
         {"role": "assistant", "content": completion.choices[0]['message']['content']}
     )
 
-    return json.loads(completion.choices[0]['message']['content'])
+    try:
+        response = json.loads(completion.choices[0]['message']['content'])
+    except Exception as e:
+        response = {"error":completion.choices[0]['message']['content']}
+
+    return response
+
+
