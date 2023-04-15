@@ -5,6 +5,7 @@ from fastapi import FastAPI
 import json
 from starlette.middleware.cors import CORSMiddleware
 from models.models import BusinessTasks
+import logging
 
 
 load_dotenv()
@@ -21,6 +22,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+logger = logging.getLogger(__name__)
 
 messages = []
 
@@ -49,6 +52,7 @@ def text2json(tasks: BusinessTasks):
     try:
         response = json.loads(completion.choices[0]['message']['content'])
     except Exception as e:
+        logger.error(e)
         response = {"error":completion.choices[0]['message']['content']}
 
     return response
