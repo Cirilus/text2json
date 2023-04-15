@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      dockerfile: ./Dockerfile
+      context: ./
+    container_name:
+      app
+    env_file:
+      - .env
+  nginx:
+    build:
+      dockerfile: ./Dockerfile
+      context: ./docker/nginx/
+    container_name: nginx
+    env_file:
+      - .env
+    depends_on:
+      - app
+    ports:
+      - "${NGINX_EXTERNAL_PORT}:80"
