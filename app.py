@@ -13,7 +13,7 @@ load_dotenv()
 chatGptAPIKey = os.getenv("CHATGPT_APIKEY")
 openai.api_key = chatGptAPIKey
 
-app = FastAPI(redoc_url=None)
+app = FastAPI(redoc_url=None, docs_url="/")
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,37 +25,76 @@ app.add_middleware(
 
 logger = logging.getLogger(__name__)
 
-messages = []
+messages_text = []
 
 
 @app.post("/api/text2json")
 def text2json(tasks: BusinessTasks):
 
-    prompt = "Write me a text UX design of the site with an approximate location and size of objects according to the " \
-             "business task in json format in desktop"
+    prompt = f"Write me a text UX in json format in {tasks.version} version design of the site with an approximate absolute " \
+             "location and size in px of objects according to the business task. Send only json without any " \
+             "additional text:"
+
     for task in tasks.tasks:
         prompt += task
 
-    messages.append(
+    messages_text.append(
         {"role": "user", "content": prompt}
     )
     completion = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        messages=messages,
+        messages=messages_text,
         temperature=0.5,
-    )
-
-    messages.append(
-        {"role": "assistant", "content": completion.choices[0]['message']['content']}
     )
 
     try:
         response = json.loads(completion.choices[0]['message']['content'])
     except Exception as e:
         logger.error(e)
-        message = []
+        messages_text.pop()
         response = {"error":completion.choices[0]['message']['content']}
+        return response
+
+    messages_text.append(
+        {"role": "assistant", "content": completion.choices[0]['message']['content']}
+    )
 
     return response
 
+
+message_html = []
+
+
+@app.post("/api/html2json")
+def text2json(tasks: BusinessTasks):
+
+    prompt = "Write me a text UX design in FORMT JSON of the site with an approximate location and size in px of this " \
+             f"objects that set you according to this body html document in a {tasks.version} version write only json without " \
+             "additional text and info"
+
+    for task in tasks.tasks:
+        prompt += task
+
+    message_html.append(
+        {"role": "user", "content": prompt}
+    )
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=message_html,
+        temperature=0.5,
+    )
+
+    try:
+        response = json.loads(completion.choices[0]['message']['content'])
+    except Exception as e:
+        logger.error(e)
+        message_html.pop()
+        response = {"error":completion.choices[0]['message']['content']}
+        return response
+
+    message_html.append(
+        {"role": "assistant", "content": completion.choices[0]['message']['content']}
+    )
+
+    return response
 
