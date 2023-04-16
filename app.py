@@ -7,7 +7,6 @@ from starlette.middleware.cors import CORSMiddleware
 from models.models import BusinessTasks
 import logging
 
-
 load_dotenv()
 
 chatGptAPIKey = os.getenv("CHATGPT_APIKEY")
@@ -30,6 +29,7 @@ messages_text = []
 
 @app.post("/api/text2json")
 def text2json(tasks: BusinessTasks):
+    global messages_text  # не бейте за это не было время подключить postgres, а вообще в идеале тут ложится redis
 
     prompt = f"Write me a text UX in json format in {tasks.version} version design of the site with an approximate absolute " \
              "location and size in px of objects according to the business task. Send only json without any " \
@@ -52,7 +52,7 @@ def text2json(tasks: BusinessTasks):
     except Exception as e:
         logger.error(e)
         messages_text.pop()
-        response = {"error":completion.choices[0]['message']['content']}
+        response = {"error": completion.choices[0]['message']['content']}
         return response
 
     messages_text.append(
@@ -67,6 +67,7 @@ message_html = []
 
 @app.post("/api/html2json")
 def text2json(tasks: BusinessTasks):
+    global message_html  # не бейте за это не было время подключить postgres, а вообще в идеале тут ложится redis
 
     prompt = "Write me a text UX design in FORMT JSON of the site with an approximate location and size in px of this " \
              f"objects that set you according to this body html document in a {tasks.version} version write only json without " \
@@ -89,7 +90,7 @@ def text2json(tasks: BusinessTasks):
     except Exception as e:
         logger.error(e)
         message_html.pop()
-        response = {"error":completion.choices[0]['message']['content']}
+        response = {"error": completion.choices[0]['message']['content']}
         return response
 
     message_html.append(
@@ -97,4 +98,3 @@ def text2json(tasks: BusinessTasks):
     )
 
     return response
-
